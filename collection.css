@@ -1,0 +1,25 @@
+/* Changes the font of all the text inside the website */
+* {
+    font-family: "DynaPuff", system-ui;
+    font-optical-sizing: auto;
+    font-weight: 100px;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+}
+.dynapuff-a {
+    font-family: "DynaPuff", system-ui;
+    font-optical-sizing: auto;
+    font-weight: 100px;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+}
+.hero{
+    padding-top: 120px;
+}
+.total-value{
+    background-color: rgb(37, 26, 192);
+    
+}
+.remove-btn:hover{
+    background-color: #ffe3e3;
+}
