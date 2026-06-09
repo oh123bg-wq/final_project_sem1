@@ -1,173 +1,279 @@
 <?php
 require('header.php');
 
-$message = "";
-// the write a message "sucess" or "danger"
-$message_type = ""; 
+$current_username = $_SESSION['user']['username'];
 
-try {
-    $rarity_query = "SELECT id, rarity_name FROM rarities ORDER BY id ASC";
-    $rarity_stmt = $db->prepare($rarity_query);
-    $rarity_stmt->execute();
-    // fetch all your rarity
-    $rarities = $rarity_stmt->fetchAll(PDO::FETCH_ASSOC); 
-    
-} catch (PDOException $e) {
-    $message = "❌ Failed to load rarities: " . $e->getMessage();
-    $message_type = "danger";
-    // prevent error
-    $rarities = []; 
+$query = "SELECT cards.*, rarities.rarity_name FROM final_project_sem1.cards LEFT JOIN rarities ON cards.rarity_id = rarities.id ORDER BY id DESC";
+
+if (isset($_POST['id'])) {
+    $id = $_POST['id'];
+
+    $deleteQuery = "DELETE FROM cards WHERE id=:id";
+
+    $stmt = $db->prepare($deleteQuery);
+    $stmt->execute([":id" => $id]);
 }
 
-
-//  检查管理员是否提交了表单
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $card_name = isset($_POST['card_name']) ? $_POST['card_name'] : null;
-    $pokemon_type = isset($_POST['pokemon_type']) ? $_POST['pokemon_type'] : null;
-    $market_value = isset($_POST['market_value']) ? $_POST['market_value'] : null;
-    $rarity_id = isset($_POST['rarity_id']) ? $_POST['rarity_id'] : null; //  接收前端选中的稀有度 ID
-    
-    // 初始化图片数据库路径变量
-    $image_db_path = null;
-
-    // 处理图片上传核心逻辑（文件夹已改成 card_img/）
-    if (isset($_FILES['card_image']) && $_FILES['card_image']['error'] == 0) {
-        
-        $file_name = $_FILES['card_image']['name'];     
-        $file_tmp  = $_FILES['card_image']['tmp_name']; 
-        
-        // prevent have same image name and make the file crash so i add the time when you upload
-        $unique_file_name = time() . '_' . $file_name; 
-        
-        // upload to card_img
-        $upload_folder = "card_img/";
-        
-        
-        $target_file_path = $upload_folder . $unique_file_name; // 结果如: "card_img/1717500000_greninja.jpg"
-
-        //  将临时文件移动到项目的 card_img 文件夹中
-        if (move_uploaded_file($file_tmp, $target_file_path)) {
-            $image_db_path = $target_file_path; // 移动成功，记录路径准备存入数据库
-        } else {
-            $message = "❌ Failed to move uploaded file to destination folder.";
-            $message_type = "danger";
-        }
-    } else {
-        $message = "❌ Please select a valid card image.";
-        $message_type = "danger";
-    }
-
-    //   如果资料齐全且上传没报错，写入 SQL 数据库
-    if ($card_name && $market_value && $rarity_id && $message_type != "danger") {
-        try {
-            //  INSERT 语句里增加了 rarity_id 字段
-            $query = "INSERT INTO cards (card_name, pokemon_type, market_value, card_image, rarity_id) 
-                      VALUES (:card_name, :pokemon_type, :market_value, :card_image, :rarity_id)";
-            
-            $stmt = $db->prepare($query);
-            $stmt->execute([
-                ':card_name' => $card_name,
-                ':pokemon_type' => $pokemon_type,
-                ':market_value' => $market_value,
-                ':card_image' => $image_db_path,
-                ':rarity_id' => $rarity_id // 👈 将外键对应的 ID 存进 cards 表
-            ]);
-
-            $message = "🎉 New card data and image uploaded successfully!";
-            $message_type = "success";
-        } catch (PDOException $e) {
-            $message = "❌ Database Error: " . $e->getMessage();
-            $message_type = "danger";
-        }
-    } else if (empty($rarity_id) && $message_type != "danger") {
-        $message = "❌ Please select a card rarity.";
-        $message_type = "danger";
-    }
-}
+$stmt = $db->prepare($query);
+$stmt->execute([]);
+$cards = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel | Add Pokémon Card</title>
+    <title>Master Card Catalog Manager</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DynaPuff:wght@400..700&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
+
     <style>
-        body { background-color: #f8fafc; }
-        .admin-card { border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); }
-        .form-label { font-weight: 600; color: #475569; }
+        * {
+            font-family: "DynaPuff", system-ui;
+            font-optical-sizing: auto;
+            font-weight: 100px;
+            font-style: normal;
+            font-variation-settings: "wdth" 100;
+        }
+
+        .dynapuff-a {
+            font-family: "DynaPuff", system-ui;
+            font-optical-sizing: auto;
+            font-weight: 100px;
+            font-style: normal;
+            font-variation-settings: "wdth" 100;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* 顶部标题栏样式 */
+        .brand-icon {
+            background-color: #a855f7;
+            color: white;
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 1.25rem;
+        }
+
+        .btn-add-card {
+            background-color: #9333ea;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-add-card:hover {
+            background-color: #7e22ce;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(147, 51, 234, 0.25);
+        }
+
+        /* 主数据卡片与表格 */
+        .catalog-card {
+            background-color: white;
+            border: 1px solid #f1f5f9;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.02);
+            overflow: hidden;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #94a3b8;
+            letter-spacing: 0.05em;
+            padding: 20px 24px;
+            border-bottom: 1px solid #f1f5f9;
+            background-color: #ffffff;
+        }
+
+        .table td {
+            padding: 18px 24px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        /* 卡牌图片微缩图 */
+        .card-thumb {
+            width: 44px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            background-color: #f1f5f9;
+        }
+
+        .card-name-text {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        /* 属性小标签 (Type Badges) */
+        .badge-type {
+            background-color: #f1f5f9;
+            color: #64748b;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+
+        /* 稀有度文字颜色 */
+        .rarity-text {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* 市场价格加粗 */
+        .market-value-text {
+            font-weight: 800;
+            color: #0f172a;
+            font-size: 1.05rem;
+        }
+
+        /* 操作按钮样式 */
+        .action-btn {
+            background: none;
+            border: none;
+            padding: 6px;
+            font-size: 1.15rem;
+            transition: transform 0.2s;
+            margin: 0 4px;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.15);
+        }
+
+        .btn-edit {
+            color: #f59e0b;
+        }
+
+        .btn-delete {
+            color: #ef4444;
+        }
     </style>
 </head>
-<body>
 
-<div class="container my-5">
-    <div class="mb-4 text-center">
-        <a href="index.php" class="btn btn-sm btn-outline-secondary px-3 rounded-pill">
-            <i class="bi bi-arrow-left"></i> Back to Home
-        </a>
+<body>
+    <div class="navbar navbar-expand-lg navbar-white bg-white border-bottom sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-4 text-dark" href="collection.php">
+                <img src="../final_project_sem1/asset/masterballs-removebg-preview.png" alt="Logo" class="logo rounded-circle" style="object-fit: cover;">
+                <span>Pokémon TCG Tracker</span>
+            </a>
+
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?php echo htmlspecialchars($current_username); ?></strong></span>
+                <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-box2-heart-fill"></i></a>
+                <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-none d-md-inline"><i class="bi bi-box2-heart-fill"></i> Your collection</a>
+                <a href="browse-card.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-search-heart-fill"></i></a>
+                <a href="browse-card.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-none d-md-inline"><i class="bi bi-search-heart-fill"></i> Browse cards</a>
+                <?php if ($_SESSION['user']['role'] == "admin"): ?>
+                    <span class="d-none d-md-inline">Admin panel</span>
+                    <a href="manage-card.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-inline d-md-none"><i class="bi bi-card-list"></i></a>
+                    <a href="manage-card.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-none d-md-inline"><i class="bi bi-card-list"></i> Manage cards</a>
+                    <a href="manage-rarities.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-inline d-md-none"><i class="bi bi-gem"></i></a>
+                    <a href="manage-rarities.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-none d-md-inline"><i class="bi bi-gem"></i> Manage tiers</a>
+                <?php endif; ?>
+                <a href="logout.php" class="btn btn-sm btn-outline-danger rounded-circle" title="Log Out">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+            </div>
+        </div>
     </div>
 
-    <div class="card admin-card p-4 p-md-5 mx-auto bg-white" style="max-width: 650px;">
-        <div class="text-center mb-4">
-            <h2 class="fw-bold text-primary">⚙️ Admin Panel</h2>
-            <p class="text-muted">Create new cards with Image and Rarity Relation</p>
+    <div class="dashboard-container">
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <div class="brand-icon">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <h1 class="h3 fw-bold m-0" style="letter-spacing: -0.02em;">Master Card Catalog Manager</h1>
+                </div>
+                <p class="text-muted m-0 small">Admin Dashboard to add, update, and upload card images to system.</p>
+            </div>
+            <div>
+                <a href="add-card.php" class="btn btn-add-card shadow-sm">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Add New Card
+                </a>
+            </div>
         </div>
 
-        <form method="POST" action="manage-card.php" enctype="multipart/form-data">
-            
-            <div class="mb-3">
-                <label for="card_name" class="form-label">Card Name</label>
-                <input type="text" class="form-control form-control-lg fs-6" id="card_name" name="card_name" placeholder="e.g., Mega Greninja ex" required>
+        <div class="card catalog-card">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">Image</th>
+                            <th style="width: 30%;">Card Name</th>
+                            <th style="width: 15%;">Type</th>
+                            <th style="width: 20%;">Rarity</th>
+                            <th style="width: 15%;">Market Value</th>
+                            <th style="width: 10%;" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($cards as $card): ?>
+                            <tr>
+                                <td>
+                                    <img src="<?= $card['card_image'] ?>" class="card-thumb" alt="<?= $card['card_name'] ?>" />
+                                </td>
+                                <td><span class="card-name-text"><?= $card['card_name'] ?></span></td>
+                                <td><span class="badge-type"><?= $card['pokemon_type'] ?></span></td>
+                                <td><span class="rarity-text"><?= $card['rarity_name'] ?></span></td>
+                                <td><span class="market-value-text">RM <?= $card['market_value'] ?></span></td>
+                                <td class="text-center">
+                                    <a
+                                        href="edit-card.php?id=<?= $card['id'] ?>"
+                                        class="btn btn-success btn-sm"><i class="bi bi-pencil"></i></a>
+                                    <form method="post" class="d-inline">
+                                        <button class="btn btn-danger btn-sm" type="submit"><i class="bi bi-trash"></i></button>
+                                        <input type="hidden" name="id" value="<?= $card['id'] ?>">
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
+        </div>
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="pokemon_type" class="form-label">Pokémon Type</label>
-                    <select class="form-select form-select-lg fs-6" id="pokemon_type" name="pokemon_type">
-                        <option value="Water">Water 💧</option>
-                        <option value="Fire">Fire 🔥</option>
-                        <option value="Grass">Grass 🌿</option>
-                        <option value="Lightning">Lightning ⚡</option>
-                        <option value="Psychic">Psychic 👁️</option>
-                        <option value="Colorless">Colorless ⚪</option>
-                        <option value="Darkness">Darkness 🌙</option>
-                    </select>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label for="market_value" class="form-label">Market Value ($)</label>
-                    <input type="number" step="0.01" class="form-control form-control-lg fs-6" id="market_value" name="market_value" placeholder="e.g., 1640.88" required>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label for="rarity_id" class="form-label">Card Rarity</label>
-                <select class="form-select form-select-lg fs-6" id="rarity_id" name="rarity_id" required>
-                    <option value="" disabled selected>-- Select Rarity --</option>
-                    <?php foreach ($rarities as $rarity): ?>
-                        <option value="<?php echo $rarity['id']; ?>">
-                            <?php echo htmlspecialchars($rarity['rarity_name']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="mb-4">
-                <label for="card_image" class="form-label">Card Image Photo</label>
-                <input type="file" class="form-control" id="card_image" name="card_image" accept="image/*" required>
-                <div class="form-text">Saved into <code>card_img/</code> folder.</div>
-            </div>
-
-            <div class="d-grid pt-2">
-                <button type="submit" class="btn btn-primary btn-lg fw-bold rounded-pill shadow-sm">
-                    <i class="bi bi-cloud-arrow-up-fill me-2"></i> Upload & Save Card
-                </button>
-            </div>
-        </form>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
+
 </html>

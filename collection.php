@@ -2,6 +2,45 @@
 require('header.php');
 
 $current_username = $_SESSION['user']['username'];
+$user_id = $_SESSION['user']['id']; // 获取当前用户 ID
+
+//  完美的 SQL 联表查询：只拿当前登录用户的收藏，并且关联卡牌信息和稀有度名称
+$query = "SELECT cards.*, rarities.rarity_name, collections.quantity, collections.id AS collection_entry_id 
+          FROM final_project_sem1.collections
+          INNER JOIN final_project_sem1.cards ON collections.card_id = cards.id
+          LEFT JOIN rarities ON cards.rarity_id = rarities.id
+          WHERE collections.user_id = ?
+          ORDER BY collections.id DESC";
+
+//  修复后的删除逻辑
+if (isset($_POST['collection_entry_id'])) {
+    $collection_entry_id = $_POST['collection_entry_id'];
+
+    //  安全策略：带上 user_id = ? 确保用户只能删除属于他自己的收藏，防止越权漏洞
+    $deleteQuery = "DELETE FROM final_project_sem1.collections WHERE id = :id AND user_id = :user_id";
+
+    $stmt = $db->prepare($deleteQuery);
+    $stmt->execute([
+        ":id" => $collection_entry_id,
+        ":user_id" => $user_id
+    ]);
+
+    header("Location: collection.php");
+    exit();
+}
+
+$stmt = $db->prepare($query);
+$stmt->execute([$user_id]); 
+$cards = $stmt->fetchAll();
+
+// 初始化累加器变量 (Variables)
+$total_binder_value = 0;
+$total_stacks = count($cards); // 直接通过 count 获取一共有多少叠不同的卡牌
+
+foreach ($cards as $card) {
+    // 将每一叠卡牌的 Stack Value 动态累加到总资产中
+    $total_binder_value += $card['market_value'] * $card['quantity'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,301 +78,116 @@ $current_username = $_SESSION['user']['username'];
 
             <div class="d-flex align-items-center gap-3">
                 <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?php echo htmlspecialchars($current_username); ?></strong></span>
-                <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm"><i class="bi bi-box2-heart-fill"></i></a>
-                <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-none d-sm-inline"><i class="bi bi-box2-heart-fill"></i> Your collection</a>
-                <a href="browse-card.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm"><i class="bi bi-search-heart-fill"></i></a>
-                <a href="browse-card.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-none d-sm-inline"><i class="bi bi-search-heart-fill"></i> Browse card</a>
+                <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-box2-heart-fill"></i></a>
+                <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-none d-md-inline"><i class="bi bi-box2-heart-fill"></i> Your collection</a>
+                <a href="browse-card.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-search-heart-fill"></i></a>
+                <a href="browse-card.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-none d-md-inline"><i class="bi bi-search-heart-fill"></i> Browse cards</a>
+                <?php if ($_SESSION['user']['role'] == "admin"): ?>
+                    <span class="d-none d-md-inline">Admin panel</span>
+                    <a href="manage-card.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-inline d-md-none"><i class="bi bi-card-list"></i></a>
+                    <a href="manage-card.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-none d-md-inline"><i class="bi bi-card-list"></i> Manage cards</a>
+                    <a href="manage-rarities.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-inline d-md-none"><i class="bi bi-gem"></i></a>
+                    <a href="manage-rarities.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-none d-md-inline"><i class="bi bi-gem"></i> Manage tiers</a>
+                <?php endif; ?>
                 <a href="logout.php" class="btn btn-sm btn-outline-danger rounded-circle" title="Log Out">
                     <i class="bi bi-box-arrow-right"></i>
                 </a>
             </div>
         </div>
     </div>
-    <!-- <div class="container-fluid bg-secondary navbar-dark fixed-top">
-        <nav class="navbar navbar-expand-lg p-2">
-            <div class="container navbar-dark">
-                <div>
-                    <img src="../final_project_sem1/asset/masterballs-removebg-preview.png" alt="Pokémon TCG Tracker Logo" style="width: 60px; height: 60px; object-fit: cover;" />
-                    <a href="#" class="navbar-brand fw-bold fs-1">Pokémon TCG Tracker</a>
-                </div>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item active">
-                            <a href="#home" class="nav-link">My collection</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#about" class="nav-link">Browse catalog</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#tv-series" class="nav-link">Name</a>
-                        </li>
-                        <li class="nav-item">
-                            <button type="button" class="btn nav-link">
-                                <i class="bi bi-box-arrow-right me-1 "></i> Log Out
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </div> -->
 
-    <div class="container hero">
-        <div class="d-flex ">
-            <div class="container justify-content-between align-items-center flex-wrap">
-                <h2>👋 Welcome, <span class="text-primary">Collector</span>!</h2>
-                <p>Here is your binder value overview and card inventory.</p>
-            </div>
-            <div class="container total-value d-flex">
-                <div><i class="bi bi-cash"></i></div>
-                <div>
-                    <p>Total Binder Value</p>
-                    <p>$999</p>
-                    <p>2 card stacks in binder</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="container my-5">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-4">
 
-            <div>
-                <h2 class="fw-bold mb-2">👋 Welcome, <span class="text-primary">Collector!</span></h2>
-                <p class="text-muted mb-0">Here is your binder value overview and card inventory.</p>
+    <div class="container py-5">
+        <div class="row align-items-center g-4">
+
+            <div class="col-md-8">
+                <h2 class="fw-bold text-dark mb-2" style="letter-spacing: -0.02em;">
+                    👋 Welcome, <span class="text-primary"><?php echo htmlspecialchars($current_username); ?></span>!
+                </h2>
+                <p class="text-muted mb-0 fs-6">
+                    Here is your binder value overview and card inventory.
+                </p>
             </div>
 
-            <div class="total-value-card d-flex align-items-center text-white p-3 shadow">
-                <div class="usd-icon-box d-flex align-items-center justify-content-center me-3">
-                    <span class="fs-4 fw-bold">$</span>
-                </div>
-                <div>
-                    <p class="text-uppercase small mb-0 opacity-75 fw-semibold" style="letter-spacing: 0.5px; font-size: 0.75rem;">Total Binder Value</p>
-                    <h2 class="fw-bold mb-0" style="font-size: 2.2rem; line-height: 1.1;">$585.50</h2>
-                    <p class="small mb-0 opacity-75" style="font-size: 0.8rem;">3 card stacks in binder</p>
+            <div class="col-md-4">
+                <div class="bg-gradient bg-primary text-white rounded-4 p-4 shadow">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 fs-3 "
+                            style="width: 55px; height: 45px; background-color: rgba(255, 255, 255, 0.2);">
+                            <i class="bi bi-cash-coin"></i>
+                        </div>
+                        <div class="flex-grow-1 w-100">
+                            <p class="text-white-75 small fw-bold text-uppercase d-block mb-1">
+                                Total Binder Value
+                            </p>
+                            <h3 class="display-6 fw-bold m-0 lh-1 mb-2">RM <?= number_format($total_binder_value, 2) ?></h3>
+                            <div class="d-flex align-items-center gap-1 text-white-75 small">
+                                <i class="bi bi-layers-half me-1"></i>
+                                <span><?= $total_stacks ?> card stacks in binder</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
         </div>
     </div>
+
     <div class="container">
         <h2 class="text-center mb-5">Your Collection</h2>
         <div class="d-flex flex-wrap">
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="card m-3 border-0 shadow-sm">
-                    <img src="../assets/cat 1.jpg" class="card-img-top" alt="Charmander" />
-                    <div class="card-body">
-                        <!-- 1. Rarity: 放在最上方，使用小字号和颜色 -->
-                        <p class="text-primary fw-bold mb-1" style="font-size: 0.8rem; text-transform: uppercase;">Rare</p>
+            <?php foreach ($cards as $card): ?>
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="card m-3 border-0 shadow-sm">
+                        <img src="<?= $card['card_image'] ?>" class="card-img-top" alt="<?= $card['card_name'] ?>" />
+                        <div class="card-body">
+                            <!-- 1. Rarity: 放在最上方，使用小字号和颜色 -->
+                            <p class="text-primary fw-bold mb-1" style="font-size: 0.8rem; text-transform: uppercase;"><?= $card['rarity_name'] ?></p>
 
-                        <!-- 卡片名称 -->
-                        <h5 class="fw-bold mb-3">Charmander</h5>
+                            <!-- 卡片名称 -->
+                            <h5 class="fw-bold mb-3"><?= $card['card_name'] ?></h5>
 
-                        <!-- 2. Value: 使用浅灰色背景包裹 -->
-                        <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-3">
-                            <span class="text-muted small">Value/Card:</span>
-                            <span class="fw-bold">$100.00</span>
-                        </div>
-
-                        <hr>
-
-                        <!-- 3. Quantity: 左右对齐的布局 -->
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small">Quantity:</span>
-                            <!-- input-group is veli gud it make the shape become nice -->
-                            <div class="input-group input-group-sm" style="width: 80px;">
-                                <button class="btn btn-outline-secondary px-2" type="button">-</button>
-                                <input type="text" class="form-control text-center p-0 border-secondary" value="1" readonly>
-                                <button class="btn btn-outline-secondary px-2" type="button">+</button>
+                            <!-- 2. Value: 使用浅灰色背景包裹 -->
+                            <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-3">
+                                <span class="text-muted small">Value/Card:</span>
+                                <span class="fw-bold">RM <?= $card['market_value'] ?></span>
                             </div>
-                        </div>
 
-                        <!-- 4. Stack Value -->
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <span class="text-muted small">Stack Value:</span>
-                            <span class="fw-bold text-dark">$100.00</span>
-                        </div>
+                            <hr>
 
-                        <!-- 删除按钮 -->
-                        <!-- i add the btn-primary is to make my hover effect work because 
+                            <!-- 3. Quantity: 左右对齐的布局 -->
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small">Quantity:</span>
+                                <!-- input-group is veli gud it make the shape become nice -->
+                                <div class="input-group input-group-sm" style="width: 80px;">
+                                    <button class="btn btn-outline-secondary px-2" type="button">-</button>
+                                    <input type="text" class="form-control text-center p-0 border-secondary" value="<?= $card['quantity'] ?>" readonly>
+                                    <button class="btn btn-outline-secondary px-2" type="button">+</button>
+                                </div>
+                            </div>
+
+                            <!-- 4. Stack Value -->
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <span class="text-muted small">Stack Value:</span>
+                                <!-- number format( ,2) is to make sure the price have 2 decimal number -->
+                                <span class="fw-bold text-dark">RM <?= number_format($card['market_value'] * $card['quantity'], 2) ?></span>
+                            </div>
+
+                            <!-- 删除按钮 -->
+                            <!-- i add the btn-primary is to make my hover effect work because 
                           i use btn-link already and make the button look exactly like a clean text hyperlink 
                           and at the same time make the hover effect cannot work-->
-                        <button type="button" class="btn btn-primary btn-link text-danger p-0 border-0 text-center w-100 remove-btn">
-                            <i class="bi bi-trash"></i> Remove from Binder
-                        </button>
+                            <form method="post" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-link text-danger p-0 border-0 text-center w-100 remove-btn">
+                                    <i class="bi bi-trash"></i> Remove from Binder
+                                </button>
+
+                                <input type="hidden" name="collection_entry_id" value="<?= $card['collection_entry_id'] ?>">
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="card m-3 border-0 shadow-sm">
-                    <img src="../assets/cat 1.jpg" class="card-img-top" alt="Charmander" />
-                    <div class="card-body">
-                        <!-- 1. Rarity: 放在最上方，使用小字号和颜色 -->
-                        <p class="text-primary fw-bold mb-1" style="font-size: 0.8rem; text-transform: uppercase;">Rare</p>
-
-                        <!-- 卡片名称 -->
-                        <h5 class="fw-bold mb-3">Charmander</h5>
-
-                        <!-- 2. Value: 使用浅灰色背景包裹 -->
-                        <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-3">
-                            <span class="text-muted small">Value/Card:</span>
-                            <span class="fw-bold">$100.00</span>
-                        </div>
-
-                        <hr>
-
-                        <!-- 3. Quantity: 左右对齐的布局 -->
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small">Quantity:</span>
-                            <div class="input-group input-group-sm" style="width: 80px;">
-                                <button class="btn btn-outline-secondary px-2" type="button">-</button>
-                                <input type="text" class="form-control text-center p-0 border-secondary" value="1" readonly>
-                                <button class="btn btn-outline-secondary px-2" type="button">+</button>
-                            </div>
-                        </div>
-
-                        <!-- 4. Stack Value -->
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <span class="text-muted small">Stack Value:</span>
-                            <span class="fw-bold text-dark">$100.00</span>
-                        </div>
-
-                        <!-- 删除按钮 -->
-                        <button type="button" class="btn btn-primary btn-link text-danger p-0 border-0 text-center w-100 remove-btn">
-                            <i class="bi bi-trash"></i> Remove from Binder
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="card m-3 border-0 shadow-sm">
-                    <img src="../assets/cat 1.jpg" class="card-img-top" alt="Charmander" />
-                    <div class="card-body">
-                        <!-- 1. Rarity: 放在最上方，使用小字号和颜色 -->
-                        <p class="text-primary fw-bold mb-1" style="font-size: 0.8rem; text-transform: uppercase;">Rare</p>
-
-                        <!-- 卡片名称 -->
-                        <h5 class="fw-bold mb-3">Charmander</h5>
-
-                        <!-- 2. Value: 使用浅灰色背景包裹 -->
-                        <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-3">
-                            <span class="text-muted small">Value/Card:</span>
-                            <span class="fw-bold">$100.00</span>
-                        </div>
-
-                        <hr>
-
-                        <!-- 3. Quantity: 左右对齐的布局 -->
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small">Quantity:</span>
-                            <div class="input-group input-group-sm" style="width: 80px;">
-                                <button class="btn btn-outline-secondary px-2" type="button">-</button>
-                                <input type="text" class="form-control text-center p-0 border-secondary" value="1" readonly>
-                                <button class="btn btn-outline-secondary px-2" type="button">+</button>
-                            </div>
-                        </div>
-
-                        <!-- 4. Stack Value -->
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <span class="text-muted small">Stack Value:</span>
-                            <span class="fw-bold text-dark">$100.00</span>
-                        </div>
-
-                        <!-- 删除按钮 -->
-                        <button type="button" class="btn btn-primary btn-link text-danger p-0 border-0 text-center w-100 remove-btn">
-                            <i class="bi bi-trash"></i> Remove from Binder
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="card m-3 border-0 shadow-sm">
-                    <img src="../assets/cat 1.jpg" class="card-img-top" alt="Charmander" />
-                    <div class="card-body">
-                        <!-- 1. Rarity: 放在最上方，使用小字号和颜色 -->
-                        <p class="text-primary fw-bold mb-1" style="font-size: 0.8rem; text-transform: uppercase;">Rare</p>
-
-                        <!-- 卡片名称 -->
-                        <h5 class="fw-bold mb-3">Charmander</h5>
-
-                        <!-- 2. Value: 使用浅灰色背景包裹 -->
-                        <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-3">
-                            <span class="text-muted small">Value/Card:</span>
-                            <span class="fw-bold">$100.00</span>
-                        </div>
-
-                        <hr>
-
-                        <!-- 3. Quantity: 左右对齐的布局 -->
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small">Quantity:</span>
-                            <div class="input-group input-group-sm" style="width: 80px;">
-                                <button class="btn btn-outline-secondary px-2" type="button">-</button>
-                                <input type="text" class="form-control text-center p-0 border-secondary" value="1" readonly>
-                                <button class="btn btn-outline-secondary px-2" type="button">+</button>
-                            </div>
-                        </div>
-
-                        <!-- 4. Stack Value -->
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <span class="text-muted small">Stack Value:</span>
-                            <span class="fw-bold text-dark">$100.00</span>
-                        </div>
-
-                        <!-- 删除按钮 -->
-                        <button type="button" class="btn btn-primary btn-link text-danger p-0 border-0 text-center w-100 remove-btn">
-                            <i class="bi bi-trash"></i> Remove from Binder
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="card m-3 border-0 shadow-sm">
-                    <img src="../assets/cat 1.jpg" class="card-img-top" alt="Charmander" />
-                    <div class="card-body">
-                        <!-- 1. Rarity: 放在最上方，使用小字号和颜色 -->
-                        <p class="text-primary fw-bold mb-1" style="font-size: 0.8rem; text-transform: uppercase;">Rare</p>
-
-                        <!-- 卡片名称 -->
-                        <h5 class="fw-bold mb-3">Charmander</h5>
-
-                        <!-- 2. Value: 使用浅灰色背景包裹 -->
-                        <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-3">
-                            <span class="text-muted small">Value/Card:</span>
-                            <span class="fw-bold">$100.00</span>
-                        </div>
-
-                        <hr>
-
-                        <!-- 3. Quantity: 左右对齐的布局 -->
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small">Quantity:</span>
-                            <div class="input-group input-group-sm" style="width: 80px;">
-                                <button class="btn btn-outline-secondary px-2" type="button">-</button>
-                                <input type="text" class="form-control text-center p-0 border-secondary" value="1" readonly>
-                                <button class="btn btn-outline-secondary px-2" type="button">+</button>
-                            </div>
-                        </div>
-
-                        <!-- 4. Stack Value -->
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <span class="text-muted small">Stack Value:</span>
-                            <span class="fw-bold text-dark">$100.00</span>
-                        </div>
-
-                        <!-- 删除按钮 -->
-                        <!-- i add the btn-primary is to make my hover effect work because 
-                          i use btn-link already andmake the button look exactly like a clean text hyperlink 
-                          and at the smae time make the hover effect cannot work-->
-                        <button type="button" class="btn btn-primary btn-link text-danger p-0 border-0 text-center w-100 remove-btn">
-                            <i class="bi bi-trash"></i> Remove from Binder
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <?php endforeach; ?>
         </div>
     </div>
     <!-- Footer Section -->

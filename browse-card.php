@@ -25,6 +25,22 @@ $cards = $stmt->fetchAll();
     <link rel="stylesheet" href="collection.css" />
     <title>Pokémon TCG Tracker</title>
     <style>
+        * {
+            font-family: "DynaPuff", system-ui;
+            font-optical-sizing: auto;
+            font-weight: 100px;
+            font-style: normal;
+            font-variation-settings: "wdth" 100;
+        }
+
+        .dynapuff-a {
+            font-family: "DynaPuff", system-ui;
+            font-optical-sizing: auto;
+            font-weight: 100px;
+            font-style: normal;
+            font-variation-settings: "wdth" 100;
+        }
+
         .logo {
             width: 50px;
             height: 50px;
@@ -33,8 +49,6 @@ $cards = $stmt->fetchAll();
         body {
             background-color: #f8fafc;
         }
-
-        
     </style>
 </head>
 
@@ -67,7 +81,7 @@ $cards = $stmt->fetchAll();
     </div>
 
     <div class="container">
-        <h2 class="text-center mb-5">Browse Card</h2>
+        <h2 class="text-center my-5 ">Browse Card</h2>
 
         <div class="d-flex flex-wrap">
             <?php foreach ($cards as $card): ?>
@@ -85,12 +99,16 @@ $cards = $stmt->fetchAll();
                             <!-- 2. Value: 使用浅灰色背景包裹 -->
                             <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-3">
                                 <span class="text-muted small">Value/Card:</span>
-                                <span class="fw-bold"><?= $card['market_value'] ?></span>
+                                <span class="fw-bold">RM <?= $card['market_value'] ?></span>
                             </div>
 
-                            <button type="button" class="btn btn-secondary btn-link text-primary p-0 border-0 text-center w-100">
-                                <i class="bi bi-plus-circle-fill"></i> Add to Your Collection
-                            </button>
+                            <form action="add-to-collection.php" method="POST">
+                                <input type="hidden" name="card_id" value="<?= $card['id'] ?>">
+
+                                <button type="submit" class="btn btn-info btn-link text-primary p-0 border-0 text-center w-100">
+                                    <i class="bi bi-plus-circle-fill"></i> Add to Your Collection
+                                </button>
+                            </form>
 
                         </div>
                     </div>
