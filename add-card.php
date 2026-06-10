@@ -140,13 +140,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <div class="card admin-card p-4 p-md-5 mx-auto bg-white" style="max-width: 650px;">
             <div class="text-center mb-4">
-                <h2 class="fw-bold text-primary">⚙️ Admin Panel</h2>
+                <h2 class="fw-bold text-primary">Add New Card</h2>
                 <p class="text-muted">Create new cards with Image and Rarity Relation</p>
             </div>
 
             <?php if (!empty($message)): ?>
-                <div class="alert alert-<?php echo $message_type; ?> alert-dismissible fade show" role="alert">
-                    <?php echo $message; ?>
+                <div class="alert alert-<?= $message_type; ?> alert-dismissible fade show" role="alert">
+                    <?= $message; ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             <?php endif; ?>
@@ -187,8 +187,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <select class="form-select form-select-lg fs-6" id="rarity_id" name="rarity_id" required>
                         <option value="" disabled selected>-- Select Rarity --</option>
                         <?php foreach ($rarities as $rarity): ?>
-                            <option value="<?php echo $rarity['id']; ?>">
-                                <?php echo htmlspecialchars($rarity['rarity_name']); ?>
+                            <option value="<?= $rarity['id']; ?>">
+                                <?= $rarity['rarity_name'] ?>
                             </option>
                         <?php endforeach; ?>
                     </select>

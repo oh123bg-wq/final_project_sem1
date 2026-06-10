@@ -44,3 +44,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['card_id'])) {
     header("Location: browse-card.php");
     exit();
 }
+?>

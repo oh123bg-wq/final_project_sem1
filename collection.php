@@ -4,7 +4,35 @@ require('header.php');
 $current_username = $_SESSION['user']['username'];
 $user_id = $_SESSION['user']['id']; // 获取当前用户 ID
 
-//  完美的 SQL 联表查询：只拿当前登录用户的收藏，并且关联卡牌信息和稀有度名称
+// 🛠️ 新增修复：处理加减数量的 AJAX POST 请求
+if (isset($_POST['action']) && $_POST['action'] === 'update_quantity') {
+    $entry_id = $_POST['entry_id'];
+    $current_qty = (int)$_POST['current_qty'];
+    $type = $_POST['type']; // 'increase' 或 'decrease'
+    
+    // 计算新数量
+    $new_qty = ($type === 'increase') ? $current_qty + 1 : $current_qty - 1;
+    
+    // 安全检查：数量绝对不能低于 1
+    if ($new_qty >= 1) {
+        $updateQtyQuery = "UPDATE final_project_sem1.collections 
+                           SET quantity = :quantity 
+                           WHERE id = :id AND user_id = :user_id";
+        $stmt = $db->prepare($updateQtyQuery);
+        $stmt->execute([
+            ':quantity' => $new_qty,
+            ':id' => $entry_id,
+            ':user_id' => $user_id
+        ]);
+    }
+    
+    // 返回 JSON 给前端 JavaScript
+    header('Content-Type: application/json');
+    echo json_encode(['success' => true]);
+    exit();
+}
+
+// 完美的 SQL 联表查询：只拿当前登录用户的收藏，并且关联卡牌信息和稀有度名称
 $query = "SELECT cards.*, rarities.rarity_name, collections.quantity, collections.id AS collection_entry_id 
           FROM final_project_sem1.collections
           INNER JOIN final_project_sem1.cards ON collections.card_id = cards.id
@@ -12,11 +40,11 @@ $query = "SELECT cards.*, rarities.rarity_name, collections.quantity, collection
           WHERE collections.user_id = ?
           ORDER BY collections.id DESC";
 
-//  修复后的删除逻辑
+// 修复后的删除逻辑
 if (isset($_POST['collection_entry_id'])) {
     $collection_entry_id = $_POST['collection_entry_id'];
 
-    //  安全策略：带上 user_id = ? 确保用户只能删除属于他自己的收藏，防止越权漏洞
+    // 安全策略：带上 user_id = ? 确保用户只能删除属于他自己的收藏，防止越权漏洞
     $deleteQuery = "DELETE FROM final_project_sem1.collections WHERE id = :id AND user_id = :user_id";
 
     $stmt = $db->prepare($deleteQuery);
@@ -76,8 +104,8 @@ foreach ($cards as $card) {
                 <span>Pokémon TCG Tracker</span>
             </a>
 
-            <div class="d-flex align-items-center gap-3">
-                <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?php echo htmlspecialchars($current_username); ?></strong></span>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?= htmlspecialchars($current_username) ?></strong></span>
                 <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-box2-heart-fill"></i></a>
                 <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-none d-md-inline"><i class="bi bi-box2-heart-fill"></i> Your collection</a>
                 <a href="browse-card.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-search-heart-fill"></i></a>
@@ -102,7 +130,7 @@ foreach ($cards as $card) {
 
             <div class="col-md-8">
                 <h2 class="fw-bold text-dark mb-2" style="letter-spacing: -0.02em;">
-                    👋 Welcome, <span class="text-primary"><?php echo htmlspecialchars($current_username); ?></span>!
+                    👋 Welcome, <span class="text-primary"><?= htmlspecialchars($current_username) ?></span>!
                 </h2>
                 <p class="text-muted mb-0 fs-6">
                     Here is your binder value overview and card inventory.
@@ -141,13 +169,15 @@ foreach ($cards as $card) {
                     <div class="card m-3 border-0 shadow-sm">
                         <img src="<?= $card['card_image'] ?>" class="card-img-top" alt="<?= $card['card_name'] ?>" />
                         <div class="card-body">
-                            <!-- 1. Rarity: 放在最上方，使用小字号和颜色 -->
                             <p class="text-primary fw-bold mb-1" style="font-size: 0.8rem; text-transform: uppercase;"><?= $card['rarity_name'] ?></p>
 
-                            <!-- 卡片名称 -->
                             <h5 class="fw-bold mb-3"><?= $card['card_name'] ?></h5>
 
-                            <!-- 2. Value: 使用浅灰色背景包裹 -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="text-muted small">Pokemon Type:</span>
+                                <span class="fw-bold text-warning bg-light p-2 rounded"><?= $card['pokemon_type'] ?></span>
+                            </div>
+
                             <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-3">
                                 <span class="text-muted small">Value/Card:</span>
                                 <span class="fw-bold">RM <?= $card['market_value'] ?></span>
@@ -155,33 +185,30 @@ foreach ($cards as $card) {
 
                             <hr>
 
-                            <!-- 3. Quantity: 左右对齐的布局 -->
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="text-muted small">Quantity:</span>
-                                <!-- input-group is veli gud it make the shape become nice -->
                                 <div class="input-group input-group-sm" style="width: 80px;">
-                                    <button class="btn btn-outline-secondary px-2" type="button">-</button>
+                                    <button class="btn btn-outline-secondary px-2 btn-qty" type="button" 
+                                            data-action="decrease" 
+                                            data-id="<?= $card['collection_entry_id'] ?>">-</button>
+                                            
                                     <input type="text" class="form-control text-center p-0 border-secondary" value="<?= $card['quantity'] ?>" readonly>
-                                    <button class="btn btn-outline-secondary px-2" type="button">+</button>
+                                    
+                                    <button class="btn btn-outline-secondary px-2 btn-qty" type="button" 
+                                            data-action="increase" 
+                                            data-id="<?= $card['collection_entry_id'] ?>">+</button>
                                 </div>
                             </div>
 
-                            <!-- 4. Stack Value -->
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <span class="text-muted small">Stack Value:</span>
-                                <!-- number format( ,2) is to make sure the price have 2 decimal number -->
                                 <span class="fw-bold text-dark">RM <?= number_format($card['market_value'] * $card['quantity'], 2) ?></span>
                             </div>
 
-                            <!-- 删除按钮 -->
-                            <!-- i add the btn-primary is to make my hover effect work because 
-                          i use btn-link already and make the button look exactly like a clean text hyperlink 
-                          and at the same time make the hover effect cannot work-->
                             <form method="post" class="d-inline">
                                 <button type="submit" class="btn btn-danger btn-link text-danger p-0 border-0 text-center w-100 remove-btn">
                                     <i class="bi bi-trash"></i> Remove from Binder
                                 </button>
-
                                 <input type="hidden" name="collection_entry_id" value="<?= $card['collection_entry_id'] ?>">
                             </form>
                         </div>
@@ -190,7 +217,7 @@ foreach ($cards as $card) {
             <?php endforeach; ?>
         </div>
     </div>
-    <!-- Footer Section -->
+
     <footer>
         <div class="container-fluid bg-white pt-4 pb-2">
             <div class="container text-center">
@@ -205,6 +232,46 @@ foreach ($cards as $card) {
         </div>
     </footer>
 
-</body>
+    <script>
+        document.querySelectorAll('.btn-qty').forEach(button => {
+            button.addEventListener('click', function() {
+                const entryId = this.getAttribute('data-id');
+                const actionType = this.getAttribute('data-action');
+                const inputElement = this.parentElement.querySelector('input');
+                const currentQty = parseInt(inputElement.value);
 
+                // 💡 防止数量变成 0 或负数
+                if (actionType === 'decrease' && currentQty <= 1) {
+                    alert("Quantity cannot be less than 1. If you want to remove it, click 'Remove from Binder'.");
+                    return; 
+                }
+
+                // 🚀 创建标准 FormData 并打包发送给后端
+                const formData = new FormData();
+                formData.append('action', 'update_quantity');
+                formData.append('entry_id', entryId);
+                formData.append('current_qty', currentQty);
+                formData.append('type', actionType);
+
+                // 发送异步 Fetch 请求到当前页面 (collection.php)
+                fetch('collection.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 成功后自动刷新页面，让 PHP 重新算出最新的所有价格总和！
+                        window.location.reload();
+                    } else {
+                        alert("Something went wrong!");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            });
+        });
+    </script>
+</body>
 </html>

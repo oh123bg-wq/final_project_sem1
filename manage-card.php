@@ -192,8 +192,8 @@ $cards = $stmt->fetchAll();
                 <span>Pokémon TCG Tracker</span>
             </a>
 
-            <div class="d-flex align-items-center gap-3">
-                <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?php echo htmlspecialchars($current_username); ?></strong></span>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?= htmlspecialchars($current_username); ?></strong></span>
                 <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-box2-heart-fill"></i></a>
                 <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-none d-md-inline"><i class="bi bi-box2-heart-fill"></i> Your collection</a>
                 <a href="browse-card.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-search-heart-fill"></i></a>
@@ -271,6 +271,20 @@ $cards = $stmt->fetchAll();
         </div>
 
     </div>
+    <!-- Footer Section -->
+    <footer>
+        <div class="container-fluid bg-white pt-4 pb-2">
+            <div class="container text-center">
+                <div class="d-flex justify-content-center pb-2">
+                    <i class="bi bi-facebook px-2"></i>
+                    <i class="bi bi-twitter px-2"></i>
+                    <i class="bi bi-instagram px-2"></i>
+                    <i class="bi bi-linkedin px-2"></i>
+                </div>
+                <p class="text-center">All rights reserved &copy; Pokémon TCG Tracker 2026.</p>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 

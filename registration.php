@@ -46,35 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $username && $email && $password) {
 }
 ?>
 
-<!-- <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Registered</title>
-</head>
-
-<body>
-    <?php if ($success_msg): ?>
-        <h1>🎉 Success!</h1>
-        <p><?php echo $success_msg; ?></p>
-    <?php endif; ?>
-
-    <?php if ($error_msg): ?>
-        <h1>⚠️ Registration Failed</h1>
-        <p><?php echo $error_msg; ?></p>
-    <?php endif; ?>
-
-    <div>
-
-        <a href="login-form.php" class="text-decoration-none small">Go back
-            <i class="bi bi-arrow-right-circle"></i></a>
-    </div>
-</body>
-
-</html> -->
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -136,14 +107,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $username && $email && $password) {
 
 <body>
 
-    <div class="status-card <?php echo $error_msg ? 'card-error' : ''; ?>">
+    <div class="status-card <?= $error_msg ? 'card-error' : ''; ?>">
         
         <?php if ($success_msg): ?>
             <div class="icon-box text-success">
                 <i class="bi bi-check-circle-fill"></i>
             </div>
             <h2 class="fw-bold text-dark mb-3">Registration Success!</h2>
-            <p class="text-secondary mb-4"><?php echo $success_msg; ?></p>
+            <p class="text-secondary mb-4"><?= $success_msg; ?></p>
             
             <a href="login-form.php" class="btn btn-pokemon w-100 text-decoration-none">
                 Go to Login <i class="bi bi-arrow-right-short"></i>
@@ -155,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $username && $email && $password) {
                 <i class="bi bi-exclamation-triangle-fill"></i>
             </div>
             <h2 class="fw-bold text-dark mb-3">Registration Failed</h2>
-            <p class="text-secondary mb-4"><?php echo $error_msg; ?></p>
+            <p class="text-secondary mb-4"><?= $error_msg; ?></p>
             
             <a href="register-form.php" class="btn btn-outline-secondary w-100 text-decoration-none mb-2 btn-failed">
                 <i class="bi bi-arrow-left-short"></i> Try Again

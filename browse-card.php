@@ -3,7 +3,7 @@ require('header.php');
 
 $current_username = $_SESSION['user']['username'];
 
-$query = "SELECT cards.*, rarities.rarity_name FROM final_project_sem1.cards LEFT JOIN rarities ON cards.rarity_id = rarities.id ORDER BY id DESC";
+$query = "SELECT cards.*, rarities.rarity_name FROM final_project_sem1.cards LEFT JOIN rarities ON cards.rarity_id = rarities.id";
 
 $stmt = $db->prepare($query);
 $stmt->execute([]);
@@ -60,8 +60,8 @@ $cards = $stmt->fetchAll();
                 <span>Pokémon TCG Tracker</span>
             </a>
 
-            <div class="d-flex align-items-center gap-3">
-                <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?php echo htmlspecialchars($current_username); ?></strong></span>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?= htmlspecialchars($current_username); ?></strong></span>
                 <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-box2-heart-fill"></i></a>
                 <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-none d-md-inline"><i class="bi bi-box2-heart-fill"></i> Your collection</a>
                 <a href="browse-card.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-search-heart-fill"></i></a>
@@ -95,6 +95,11 @@ $cards = $stmt->fetchAll();
 
                             <!-- 卡片名称 -->
                             <h5 class="fw-bold mb-3"><?= $card['card_name'] ?></h5>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="text-muted small">Pokemon Type:</span>
+                                <span class="fw-bold text-warning bg-light p-2 rounded"><?= $card['pokemon_type'] ?></span>
+                            </div>
 
                             <!-- 2. Value: 使用浅灰色背景包裹 -->
                             <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-3">

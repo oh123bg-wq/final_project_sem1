@@ -3,7 +3,37 @@ require('header.php');
 
 $current_username = $_SESSION['user']['username'];
 
+// 🚀 核心修复：添加处理表单提交（POST 请求）的后端逻辑
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['rarity_name'])) {
+    $rarity_name = trim($_POST['rarity_name']);
+
+    // 确保输入的名称不是空的
+    if (!empty($rarity_name)) {
+        // 使用 PDO Prepared Statement 插入数据，防止 SQL Injection
+        $insertQuery = "INSERT INTO final_project_sem1.rarities (rarity_name) VALUES (:rarity_name)";
+        $insertStmt = $db->prepare($insertQuery);
+        $insertStmt->execute([':rarity_name' => $rarity_name]);
+
+        // 💡 最佳实践：使用 Header Redirect 刷新页面
+        // 这样可以防止用户在提交后按浏览器的“刷新”键导致数据重复插入数据库
+        header("Location: manage-rarities.php");
+        exit();
+    }
+}
+
 $query = "SELECT * FROM rarities";
+
+if (isset($_POST['id'])) {
+    $id = $_POST['id'];
+
+    $deleteQuery = "DELETE FROM rarities WHERE id=:id";
+
+    $stmt = $db->prepare($deleteQuery);
+    $stmt->execute([":id" => $id]);
+
+    header("Location: manage-rarities.php");
+    exit();
+}
 
 $stmt = $db->prepare($query);
 $stmt->execute([]);
@@ -21,161 +51,7 @@ $rarities = $stmt->fetchAll();
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DynaPuff:wght@400..700&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
-
-    <style>
-        * {
-            font-family: "DynaPuff", system-ui;
-            font-optical-sizing: auto;
-            font-weight: 100px;
-            font-style: normal;
-            font-variation-settings: "wdth" 100;
-        }
-
-        .dynapuff-a {
-            font-family: "DynaPuff", system-ui;
-            font-optical-sizing: auto;
-            font-weight: 100px;
-            font-style: normal;
-            font-variation-settings: "wdth" 100;
-        }
-
-
-        .logo {
-            width: 50px;
-            height: 50px;
-        }
-
-        .manager-container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        /* 顶部标题栏 */
-        .brand-icon {
-            background-color: #9333ea;
-            color: white;
-            width: 36px;
-            height: 36px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            font-size: 1.1rem;
-        }
-
-        /* 左侧与右侧通用的卡片容器样式 */
-        .custom-card {
-            background-color: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.01);
-        }
-
-        /* 表单元素微调 */
-        .form-label {
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: #64748b;
-            letter-spacing: 0.05em;
-        }
-
-        .form-control {
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 12px 16px;
-            font-size: 0.95rem;
-            background-color: #fafafa;
-        }
-
-        .form-control:focus {
-            border-color: #a855f7;
-            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
-            background-color: white;
-        }
-
-        /* 紫色按钮 */
-        .btn-purple {
-            background-color: #9333ea;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: all 0.2s ease;
-        }
-
-        .btn-purple:hover {
-            background-color: #7e22ce;
-            color: white;
-            box-shadow: 0 4px 12px rgba(147, 51, 234, 0.2);
-        }
-
-        /* 右侧列表表格样式 */
-        .card-header-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: #0f172a;
-            padding: 24px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .table {
-            margin-bottom: 0;
-        }
-
-        .table th {
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: #94a3b8;
-            letter-spacing: 0.05em;
-            padding: 16px 24px;
-            border-bottom: 1px solid #f1f5f9;
-            background-color: #ffffff;
-        }
-
-        .table td {
-            padding: 20px 24px;
-            vertical-align: middle;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .id-text {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #94a3b8;
-        }
-
-        .rarity-name-text {
-            font-weight: 700;
-            color: #1e293b;
-            font-size: 1.05rem;
-        }
-
-        /* 删除垃圾桶按钮 */
-        .btn-delete-link {
-            background: none;
-            border: none;
-            color: #ef4444;
-            font-weight: 600;
-            font-size: 0.85rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.2s;
-            padding: 4px 8px;
-            border-radius: 6px;
-        }
-
-        .btn-delete-link:hover {
-            color: #b91c1c;
-            background-color: #fef2f2;
-            transform: scale(1.02);
-        }
-    </style>
+    <link rel="stylesheet" href="manage-rarities.css" />
 </head>
 
 <body>
@@ -186,8 +62,8 @@ $rarities = $stmt->fetchAll();
                 <span>Pokémon TCG Tracker</span>
             </a>
 
-            <div class="d-flex align-items-center gap-3">
-                <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?php echo htmlspecialchars($current_username); ?></strong></span>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?= htmlspecialchars($current_username); ?></strong></span>
                 <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-box2-heart-fill"></i></a>
                 <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-none d-md-inline"><i class="bi bi-box2-heart-fill"></i> Your collection</a>
                 <a href="browse-card.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-search-heart-fill"></i></a>
@@ -229,7 +105,8 @@ $rarities = $stmt->fetchAll();
                         <h2 class="h6 fw-bold m-0" style="color: #0f172a; font-size: 1rem;">Add New Rarity</h2>
                     </div>
 
-                    <form method="POST" action="manage-rarity.php">
+
+                    <form method="POST" action="manage-rarities.php">
                         <div class="mb-4">
                             <label for="rarity_name" class="form-label mb-2">Rarity Name</label>
                             <input type="text" class="form-control" id="rarity_name" name="rarity_name" placeholder="e.g. Ultra Rare, Secret Rare" required>
@@ -265,7 +142,10 @@ $rarities = $stmt->fetchAll();
                                         <td><span class="id-text"><?= $rarity['id'] ?></span></td>
                                         <td><span class="rarity-name-text"><?= $rarity['rarity_name'] ?></span></td>
                                         <td class="text-end">
-                                            <button class="btn-delete-link"><i class="bi bi-trash3-fill"></i> Delete</button>
+                                            <form method="post">
+                                                <button class="btn-delete-link" type="submit"><i class="bi bi-trash3-fill"></i> Delete</button>
+                                                <input type="hidden" name="id" value="<?= $rarity['id'] ?>">
+                                            </form>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -277,6 +157,20 @@ $rarities = $stmt->fetchAll();
 
         </div>
     </div>
+    <!-- Footer Section -->
+    <footer>
+        <div class="container-fluid bg-white pt-4 pb-2">
+            <div class="container text-center">
+                <div class="d-flex justify-content-center pb-2">
+                    <i class="bi bi-facebook px-2"></i>
+                    <i class="bi bi-twitter px-2"></i>
+                    <i class="bi bi-instagram px-2"></i>
+                    <i class="bi bi-linkedin px-2"></i>
+                </div>
+                <p class="text-center">All rights reserved &copy; Pokémon TCG Tracker 2026.</p>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

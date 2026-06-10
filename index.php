@@ -67,7 +67,7 @@ $current_username = $is_logged_in ? $_SESSION['user']['username'] : 'Gamer';
 
             <div class="d-flex align-items-center gap-3">
                 <?php if ($is_logged_in): ?>
-                    <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?php echo htmlspecialchars($current_username); ?></strong></span>
+                    <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?= htmlspecialchars($current_username); ?></strong></span>
                     <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm">My Binder</a>
                     <a href="logout.php?logout=true" class="btn btn-sm btn-outline-danger rounded-circle" title="Log Out">
                         <i class="bi bi-box-arrow-right"></i>
