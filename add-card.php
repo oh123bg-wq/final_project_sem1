@@ -5,16 +5,17 @@ $message = "";
 // the write a message "sucess" or "danger"
 $message_type = "";
 
-try {
-    $rarity_query = "SELECT id, rarity_name FROM rarities ORDER BY id ASC";
-    $rarity_stmt = $db->prepare($rarity_query);
-    $rarity_stmt->execute();
+$rarity_query = "SELECT id, rarity_name FROM rarities ORDER BY id ASC";
+$rarity_stmt = $db->prepare($rarity_query);
+
+// 💡 直接用 if 判断 execute() 是成功 (true) 还是失败 (false)
+if ($rarity_stmt && $rarity_stmt->execute()) {
     // fetch all your rarity
     $rarities = $rarity_stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $message = "❌ Failed to load rarities: " . $e->getMessage();
+} else {
+    $message = "❌ Failed to load rarities due to a database issue.";
     $message_type = "danger";
-    // prevent error
+    // prevent error (依然给个空数组，防止下方的 HTML foreach 循环报错)
     $rarities = [];
 }
 
@@ -55,26 +56,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $message_type = "danger";
     }
 
-    //   如果资料齐全且上传没报错，写入 SQL 数据库
+    // 如果资料齐全且上传没报错，写入 SQL 数据库
     if ($card_name && $market_value && $rarity_id && $message_type != "danger") {
-        try {
 
-            $query = "INSERT INTO cards (card_name, pokemon_type, market_value, card_image, rarity_id) 
-                      VALUES (:card_name, :pokemon_type, :market_value, :card_image, :rarity_id)";
+        // 🛠️ 2. 这里的写入数据的 Try-Catch 也换成了 If-Else
+        $query = "INSERT INTO cards (card_name, pokemon_type, market_value, card_image, rarity_id) 
+                  VALUES (:card_name, :pokemon_type, :market_value, :card_image, :rarity_id)";
 
-            $stmt = $db->prepare($query);
-            $stmt->execute([
-                ':card_name' => $card_name,
-                ':pokemon_type' => $pokemon_type,
-                ':market_value' => $market_value,
-                ':card_image' => $image_db_path,
-                ':rarity_id' => $rarity_id
-            ]);
+        $stmt = $db->prepare($query);
 
+        // 直接在 if 里面执行并判断结果
+        if ($stmt && $stmt->execute([
+            ':card_name' => $card_name,
+            ':pokemon_type' => $pokemon_type,
+            ':market_value' => $market_value,
+            ':card_image' => $image_db_path,
+            ':rarity_id' => $rarity_id
+        ])) {
             $message = "🎉 New card data and image uploaded successfully!";
             $message_type = "success";
-        } catch (PDOException $e) {
-            $message = "❌ Database Error: " . $e->getMessage();
+        } else {
+            $message = "❌ Database Error: Failed to save the card into database.";
             $message_type = "danger";
         }
     } else if (empty($rarity_id) && $message_type != "danger") {
@@ -171,8 +173,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <option value="Darkness">Darkness 🌙</option>
                             <option value="Dragon">Dragon 🐉</option>
                             <option value="Trainer">Trainer 👩🏻‍💼</option>
-                            <option value="Trainer Stadium">Trainer 🏟️</option>
-                            <option value="Trainer Item">Trainer 📦</option>
+                            <option value="Stadium">Trainer 🏟️</option>
+                            <option value="Item">Trainer 📦</option>
                         </select>
                     </div>
 

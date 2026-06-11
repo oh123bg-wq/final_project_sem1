@@ -172,9 +172,9 @@ Write each as a "belongs to" sentence, then name the foreign key.
 |login.php / register.php|User authentication|Yes|Everyone|
 |my_collection.php|Shows the user's personal collection & total value|No|Collector, Admin|
 |add-to-collection.php|Form $\rightarrow$ Adds a card to user's collection or updates quantity|Yes|Collector, Admin|
-|admin/manage-rarities.php|Form $\rightarrow$ Allows admin to add or manage rarity tiers (e.g., Common, Secret Rare)|Yes|Admin only|
-|admin/add-card.php|Form $\rightarrow$ Adds a brand new card into the master database and uploads image|Yes|Admin only|
-|admin/manage-cards.php|List page to edit/delete any card details|No|Admin only|
+|manage-rarities.php|Form $\rightarrow$ Allows admin to add or manage rarity tiers (e.g., Common, Secret Rare)|Yes|Admin only|
+|add-card.php|Form $\rightarrow$ Adds a brand new card into the master database and uploads image|Yes|Admin only|
+|manage-cards.php|List page to edit/delete any card details|No|Admin only|
 |logout.php|Destroys session and logs out user|No|Collector, Admin|
 
 ---

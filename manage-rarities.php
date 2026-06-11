@@ -3,7 +3,7 @@ require('header.php');
 
 $current_username = $_SESSION['user']['username'];
 
-// 🚀 核心修复：添加处理表单提交（POST 请求）的后端逻辑
+// 处理表单提交（POST 请求）的后端逻辑
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['rarity_name'])) {
     $rarity_name = trim($_POST['rarity_name']);
 
@@ -14,7 +14,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['rarity_name'])) {
         $insertStmt = $db->prepare($insertQuery);
         $insertStmt->execute([':rarity_name' => $rarity_name]);
 
-        // 💡 最佳实践：使用 Header Redirect 刷新页面
         // 这样可以防止用户在提交后按浏览器的“刷新”键导致数据重复插入数据库
         header("Location: manage-rarities.php");
         exit();

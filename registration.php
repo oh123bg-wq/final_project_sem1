@@ -1,4 +1,3 @@
-<!-- This php file adds a data row into the myphpadmin5 users table -->
 <?php
 
 $username = isset($_POST['username']) ? $_POST['username'] : null;
@@ -16,7 +15,7 @@ $success_msg = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && $username && $email && $password) {
 
     // have same email cannot register
-    // go db check is it have the smae email that the user register if have let me see the id
+    // go db check is it have the same email that the user register if have let me see the id
     $check_query = "SELECT id FROM users WHERE email = :email";
     // prevent sql kena hacker attack(SQL Injection attacks)
     $check_stmt = $db->prepare($check_query);
@@ -74,10 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $username && $email && $password) {
             width: 100%;
             max-width: 450px;
             text-align: center;
-            border-top: 6px solid #2a75d3; /* 经典的宝可梦蓝色调 */
+            border-top: 6px solid #2a75d3; 
         }
         .status-card.card-error {
-            border-top-color: #dc3545; /* 失败时显示红色条 */
+            border-top-color: #dc3545; 
         }
         .icon-box {
             font-size: 3.5rem;

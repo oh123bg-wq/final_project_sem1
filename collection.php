@@ -2,18 +2,20 @@
 require('header.php');
 
 $current_username = $_SESSION['user']['username'];
-$user_id = $_SESSION['user']['id']; // 获取当前用户 ID
+// get current user ID
+$user_id = $_SESSION['user']['id'];
 
-// 🛠️ 新增修复：处理加减数量的 AJAX POST 请求
+//  AJAX POST (+ or - quantity)
 if (isset($_POST['action']) && $_POST['action'] === 'update_quantity') {
     $entry_id = $_POST['entry_id'];
-    $current_qty = (int)$_POST['current_qty'];
-    $type = $_POST['type']; // 'increase' 或 'decrease'
-    
-    // 计算新数量
+    $current_qty = $_POST['current_qty'];
+    // 'increase' or 'decrease'
+    $type = $_POST['type'];
+
+    // calculate the new quantity
     $new_qty = ($type === 'increase') ? $current_qty + 1 : $current_qty - 1;
-    
-    // 安全检查：数量绝对不能低于 1
+
+    // prevent quantity less than 1
     if ($new_qty >= 1) {
         $updateQtyQuery = "UPDATE final_project_sem1.collections 
                            SET quantity = :quantity 
@@ -25,7 +27,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_quantity') {
             ':user_id' => $user_id
         ]);
     }
-    
+
     // 返回 JSON 给前端 JavaScript
     header('Content-Type: application/json');
     echo json_encode(['success' => true]);
@@ -58,7 +60,7 @@ if (isset($_POST['collection_entry_id'])) {
 }
 
 $stmt = $db->prepare($query);
-$stmt->execute([$user_id]); 
+$stmt->execute([$user_id]);
 $cards = $stmt->fetchAll();
 
 // 初始化累加器变量 (Variables)
@@ -188,15 +190,15 @@ foreach ($cards as $card) {
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="text-muted small">Quantity:</span>
                                 <div class="input-group input-group-sm" style="width: 80px;">
-                                    <button class="btn btn-outline-secondary px-2 btn-qty" type="button" 
-                                            data-action="decrease" 
-                                            data-id="<?= $card['collection_entry_id'] ?>">-</button>
-                                            
+                                    <button class="btn btn-outline-secondary px-2 btn-qty" type="button"
+                                        data-action="decrease"
+                                        data-id="<?= $card['collection_entry_id'] ?>">-</button>
+
                                     <input type="text" class="form-control text-center p-0 border-secondary" value="<?= $card['quantity'] ?>" readonly>
-                                    
-                                    <button class="btn btn-outline-secondary px-2 btn-qty" type="button" 
-                                            data-action="increase" 
-                                            data-id="<?= $card['collection_entry_id'] ?>">+</button>
+
+                                    <button class="btn btn-outline-secondary px-2 btn-qty" type="button"
+                                        data-action="increase"
+                                        data-id="<?= $card['collection_entry_id'] ?>">+</button>
                                 </div>
                             </div>
 
@@ -233,45 +235,62 @@ foreach ($cards as $card) {
     </footer>
 
     <script>
+        // get all the btn that name btn-qty out 
+        // and addEventListener (事件监听器) is to know when the user click the btn that in btn-qty 
+        // and execute the following Function
         document.querySelectorAll('.btn-qty').forEach(button => {
             button.addEventListener('click', function() {
+                // to know who press and press what
+                // entryId = which card
                 const entryId = this.getAttribute('data-id');
+                // actionType = is the user press + or -
                 const actionType = this.getAttribute('data-action');
                 const inputElement = this.parentElement.querySelector('input');
                 const currentQty = parseInt(inputElement.value);
 
-                // 💡 防止数量变成 0 或负数
+                // To prevent the quantity from becoming 0 or negative.
+                // if the user press - wich the quantity is 1, a warning window pops up directly in the browser.
                 if (actionType === 'decrease' && currentQty <= 1) {
                     alert("Quantity cannot be less than 1. If you want to remove it, click 'Remove from Binder'.");
-                    return; 
+                    //stop the following code
+                    return;
                 }
 
-                // 🚀 创建标准 FormData 并打包发送给后端
+                // create FormData and package and send to the backend
                 const formData = new FormData();
+                // append mean label 
+                // to let php know is change the qtn not delete
                 formData.append('action', 'update_quantity');
+                // entry_id is in PHP and entryID is in JS
+                // let php know change which card
                 formData.append('entry_id', entryId);
+                // let the php know how many quantity user currently have
                 formData.append('current_qty', currentQty);
+                // let the php know is +1 or -1
                 formData.append('type', actionType);
 
-                // 发送异步 Fetch 请求到当前页面 (collection.php)
+                // the Fetch API to sends the formData package to collection.php in the background 
+                // using the POST method without refreshing the page.
                 fetch('collection.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // 成功后自动刷新页面，让 PHP 重新算出最新的所有价格总和！
-                        window.location.reload();
-                    } else {
-                        alert("Something went wrong!");
-                    }
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                });
+                        method: 'POST',
+                        body: formData
+                    })
+                    // after the php send the code back response.json will converts it 
+                    // into a readable JSON Object to let JSON know
+                    // => mean 塞进右边 code
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Upon success, automatically refresh the page to allow PHP 
+                            // to recalculate the latest total price!
+                            window.location.reload();
+                        } else {
+                            alert("Something went wrong!");
+                        }
+                    })
             });
         });
     </script>
 </body>
+
 </html>

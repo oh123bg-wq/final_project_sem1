@@ -157,8 +157,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 "Darkness" => "Darkness 🌙",
                 "Dragon" => "Dragon 🐉",
                 "Trainer" => "Trainer 👩🏻‍💼",
-                "Trainer Stadium" => "Trainer 🏟️",
-                "Trainer Item" => "Trainer 📦"
+                "Stadium" => "Trainer 🏟️",
+                "Item" => "Trainer 📦"
               ];
               foreach ($types as $val => $label):
               ?>
