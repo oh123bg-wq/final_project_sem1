@@ -7,14 +7,13 @@ $current_username = $_SESSION['user']['username'];
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['rarity_name'])) {
     $rarity_name = trim($_POST['rarity_name']);
 
-    // 确保输入的名称不是空的
+    // make sure the rarity you want add is not blank 确保输入的名称不是空的
     if (!empty($rarity_name)) {
-        // 使用 PDO Prepared Statement 插入数据，防止 SQL Injection
+        // Use PDO Prepared Statement insert data，prevent SQL Injection
         $insertQuery = "INSERT INTO final_project_sem1.rarities (rarity_name) VALUES (:rarity_name)";
         $insertStmt = $db->prepare($insertQuery);
         $insertStmt->execute([':rarity_name' => $rarity_name]);
 
-        // 这样可以防止用户在提交后按浏览器的“刷新”键导致数据重复插入数据库
         header("Location: manage-rarities.php");
         exit();
     }
@@ -62,7 +61,6 @@ $rarities = $stmt->fetchAll();
             </a>
 
             <div class="d-flex align-items-center gap-2">
-                <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?= htmlspecialchars($current_username); ?></strong></span>
                 <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-box2-heart-fill"></i></a>
                 <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-none d-md-inline"><i class="bi bi-box2-heart-fill"></i> Your collection</a>
                 <a href="browse-card.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-search-heart-fill"></i></a>
@@ -73,6 +71,8 @@ $rarities = $stmt->fetchAll();
                     <a href="manage-card.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-none d-md-inline"><i class="bi bi-card-list"></i> Manage cards</a>
                     <a href="manage-rarities.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-inline d-md-none"><i class="bi bi-gem"></i></a>
                     <a href="manage-rarities.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-none d-md-inline"><i class="bi bi-gem"></i> Manage tiers</a>
+                    <a href="manage-user.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-inline d-md-none"><i class="bi bi-people"></i></a>
+                    <a href="manage-user.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-none d-md-inline"><i class="bi bi-people"></i> Manage users</a>
                 <?php endif; ?>
                 <a href="logout.php" class="btn btn-sm btn-outline-danger rounded-circle" title="Log Out">
                     <i class="bi bi-box-arrow-right"></i>

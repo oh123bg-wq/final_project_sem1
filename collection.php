@@ -16,6 +16,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_quantity') {
     $new_qty = ($type === 'increase') ? $current_qty + 1 : $current_qty - 1;
 
     // prevent quantity less than 1
+    // the qty must be 1 or more than 1 just can make the code work
     if ($new_qty >= 1) {
         $updateQtyQuery = "UPDATE final_project_sem1.collections 
                            SET quantity = :quantity 
@@ -29,12 +30,15 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_quantity') {
     }
 
     // 返回 JSON 给前端 JavaScript
+    // tell the browser that the data coming from the PHP server is a 
+    // formatted JSON object, not a regular HTML webpage.
     header('Content-Type: application/json');
+    // print this message out in JSON and send to JSON
     echo json_encode(['success' => true]);
     exit();
 }
 
-// 完美的 SQL 联表查询：只拿当前登录用户的收藏，并且关联卡牌信息和稀有度名称
+// 只拿当前登录用户的收藏，并且关联卡牌信息和稀有度名称
 $query = "SELECT cards.*, rarities.rarity_name, collections.quantity, collections.id AS collection_entry_id 
           FROM final_project_sem1.collections
           INNER JOIN final_project_sem1.cards ON collections.card_id = cards.id
@@ -42,7 +46,7 @@ $query = "SELECT cards.*, rarities.rarity_name, collections.quantity, collection
           WHERE collections.user_id = ?
           ORDER BY collections.id DESC";
 
-// 修复后的删除逻辑
+// Delete
 if (isset($_POST['collection_entry_id'])) {
     $collection_entry_id = $_POST['collection_entry_id'];
 
@@ -65,7 +69,8 @@ $cards = $stmt->fetchAll();
 
 // 初始化累加器变量 (Variables)
 $total_binder_value = 0;
-$total_stacks = count($cards); // 直接通过 count 获取一共有多少叠不同的卡牌
+// 直接通过 count 获取一共有多少叠不同的卡牌
+$total_stacks = count($cards); 
 
 foreach ($cards as $card) {
     // 将每一叠卡牌的 Stack Value 动态累加到总资产中
@@ -107,7 +112,6 @@ foreach ($cards as $card) {
             </a>
 
             <div class="d-flex align-items-center gap-2">
-                <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?= htmlspecialchars($current_username) ?></strong></span>
                 <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-box2-heart-fill"></i></a>
                 <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-none d-md-inline"><i class="bi bi-box2-heart-fill"></i> Your collection</a>
                 <a href="browse-card.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-search-heart-fill"></i></a>
@@ -118,6 +122,8 @@ foreach ($cards as $card) {
                     <a href="manage-card.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-none d-md-inline"><i class="bi bi-card-list"></i> Manage cards</a>
                     <a href="manage-rarities.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-inline d-md-none"><i class="bi bi-gem"></i></a>
                     <a href="manage-rarities.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-none d-md-inline"><i class="bi bi-gem"></i> Manage tiers</a>
+                    <a href="manage-user.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-inline d-md-none"><i class="bi bi-people"></i></a>
+                    <a href="manage-user.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-none d-md-inline"><i class="bi bi-people"></i> Manage users</a>
                 <?php endif; ?>
                 <a href="logout.php" class="btn btn-sm btn-outline-danger rounded-circle" title="Log Out">
                     <i class="bi bi-box-arrow-right"></i>
@@ -125,6 +131,7 @@ foreach ($cards as $card) {
             </div>
         </div>
     </div>
+
 
 
     <div class="container py-5">

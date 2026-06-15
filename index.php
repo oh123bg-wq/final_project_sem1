@@ -3,11 +3,10 @@ session_start();
 
 $db = new PDO("mysql:host=localhost;dbname=final_project_sem1", "root");
 
-// 1. 统一对齐全站的 'user' 密码牌钥匙
+// $is_logged_in = user 
 $is_logged_in = isset($_SESSION['user']);
 
-// 2. ✨ 重新召回基础变量：如果登录了就从数组抓名字，没登录就设置默认代号，彻底根除报错
-$current_username = $is_logged_in ? $_SESSION['user']['username'] : 'Gamer';
+$current_username = $is_logged_in ? $_SESSION['user']['username'] : '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -35,7 +34,6 @@ $current_username = $is_logged_in ? $_SESSION['user']['username'] : 'Gamer';
             height: 50px;
         }
 
-        /* ✨ 自适应改进：移除原本写死宽高的 .pic 属性，换成自适应图片方案 */
         .pic-logo {
             width: 100%;
             max-width: 350px;
@@ -73,7 +71,7 @@ $current_username = $is_logged_in ? $_SESSION['user']['username'] : 'Gamer';
                         <i class="bi bi-box-arrow-right"></i>
                     </a>
                 <?php else: ?>
-                    <a href="login-form.php" class="btn btn-sm btn-outline-secondary px-3 rounded-pill fw-semibold">Sign In</a>
+                    <a href="login-form.php" class="btn btn-sm btn-outline-secondary px-3 rounded-pill fw-semibold">Login</a>
                     <a href="register-form.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm">Sign Up</a>
                 <?php endif; ?>
             </div>

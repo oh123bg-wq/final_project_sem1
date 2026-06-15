@@ -1,20 +1,16 @@
 <?php
 require('header.php');
 
-// 1. 页面加载时，去数据库抓取所有的 rarities 列表
-try {
-  $rarity_query = "SELECT id, rarity_name FROM rarities ORDER BY id ASC";
-  $rarity_stmt = $db->prepare($rarity_query);
-  $rarity_stmt->execute();
-  $rarities = $rarity_stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-  $rarities = [];
-}
+// 1. Load all rarities for the dropdown menu (页面加载时，直接抓取所有的 rarities 列表)
+$rarity_query = "SELECT id, rarity_name FROM rarities ORDER BY id ASC";
+$rarity_stmt = $db->prepare($rarity_query);
+$rarity_stmt->execute();
+$rarities = $rarity_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $card = null;
 $id = null;
 
-// 2. 当通过 URL (GET 请求) 访问页面时，抓取这张卡牌的原本数据
+// 2. Fetch original card data through GET request (当通过 URL 访问页面时，抓取这张卡牌的原本数据)
 if (isset($_GET['id'])) {
   $id = $_GET['id'];
 
@@ -25,7 +21,7 @@ if (isset($_GET['id'])) {
   ]);
   $card = $stmt->fetch();
 
-  // 如果找不到这张卡牌，安全退回到管理页面
+  // If card not found, redirect safely (如果找不到这张卡牌，安全退回到管理页面)
   if (!$card) {
     header("Location: manage-card.php");
     exit();
@@ -35,17 +31,17 @@ if (isset($_GET['id'])) {
   exit();
 }
 
-// 3. 处理表单提交 (POST 请求)
+// 3. Handle Form Submission through POST request (处理表单提交)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   $card_name = $_POST['card_name'];
   $pokemon_type = $_POST['pokemon_type'];
   $market_value = $_POST['market_value'];
   $rarity_id = $_POST['rarity_id'];
 
-  // 默认方案：如果用户没有选新图，继续使用数据库里原本的老图片路径
+  // Default fallback: keep the old image path if no new image is uploaded (如果没有选新图，继续使用老图片路径)
   $image_db_path = $card['card_image'];
 
-  // 4. 检查用户是否有上传新文件
+  // 4. Check for new file uploads (检查用户是否有上传新文件)
   if (isset($_FILES['card_image']) && $_FILES['card_image']['error'] == 0) {
     $target_dir = "card_img/";
 
@@ -57,11 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $target_file = $target_dir . $file_name;
 
     if (move_uploaded_file($_FILES["card_image"]["tmp_name"], $target_file)) {
-      $image_db_path = $target_file; // 如果新图片上传成功，更新路径
+      $image_db_path = $target_file; // Update path if upload succeeds (如果新图片上传成功，更新路径)
     }
   }
 
-  // 5. 执行数据库 UPDATE 更新语句
+  // 5. Execute database UPDATE statement (执行数据库 UPDATE 更新语句)
   $updateQuery = "UPDATE cards SET 
                     card_name = :card_name, 
                     pokemon_type = :pokemon_type, 
@@ -80,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     ":id" => $id
   ]);
 
-  // 修改成功后跳转回管理列表
+  // Redirect back to management dashboard (修改成功后跳转回管理列表)
   header("Location: manage-card.php");
   exit();
 }
@@ -160,9 +156,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 "Stadium" => "Trainer 🏟️",
                 "Item" => "Trainer 📦"
               ];
-              foreach ($types as $val => $label):
+              foreach ($types as $type => $label):
               ?>
-                <option value="<?= $val ?>" <?= $card['pokemon_type'] == $val ? 'selected' : '' ?>><?= $label ?></option>
+                <option value="<?= $type ?>" <?= $card['pokemon_type'] == $type ? 'selected' : '' ?>><?= $label ?></option>
               <?php endforeach; ?>
             </select>
           </div>

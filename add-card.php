@@ -8,7 +8,7 @@ $message_type = "";
 $rarity_query = "SELECT id, rarity_name FROM rarities ORDER BY id ASC";
 $rarity_stmt = $db->prepare($rarity_query);
 
-// 💡 直接用 if 判断 execute() 是成功 (true) 还是失败 (false)
+// 直接用 if 判断 execute() 是成功 (true) 还是失败 (false)
 if ($rarity_stmt && $rarity_stmt->execute()) {
     // fetch all your rarity
     $rarities = $rarity_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // 如果资料齐全且上传没报错，写入 SQL 数据库
     if ($card_name && $market_value && $rarity_id && $message_type != "danger") {
 
-        // 🛠️ 2. 这里的写入数据的 Try-Catch 也换成了 If-Else
+        // 这里的写入数据的 Try-Catch 也换成了 If-Else
         $query = "INSERT INTO cards (card_name, pokemon_type, market_value, card_image, rarity_id) 
                   VALUES (:card_name, :pokemon_type, :market_value, :card_image, :rarity_id)";
 

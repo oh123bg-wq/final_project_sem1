@@ -3,12 +3,13 @@ require('header.php');
 
 $current_username = $_SESSION['user']['username'];
 
+// SQL LEFT JOIN 联表查询语句，通过两张表共有的 ID，把 cards 表的所有卡牌数据和 rarities 表对应的稀有度名称（如 SR/UR）安全地拼接在一起。
 $query = "SELECT cards.*, rarities.rarity_name FROM final_project_sem1.cards LEFT JOIN rarities ON cards.rarity_id = rarities.id";
 
 $stmt = $db->prepare($query);
 $stmt->execute([]);
 $cards = $stmt->fetchAll();
-// echo json_encode($cards)
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -61,7 +62,6 @@ $cards = $stmt->fetchAll();
             </a>
 
             <div class="d-flex align-items-center gap-2">
-                <span class="text-muted small d-none d-sm-inline">👋 Welcome, <strong class="text-dark"><?= htmlspecialchars($current_username); ?></strong></span>
                 <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-box2-heart-fill"></i></a>
                 <a href="collection.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-none d-md-inline"><i class="bi bi-box2-heart-fill"></i> Your collection</a>
                 <a href="browse-card.php" class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-inline d-md-none"><i class="bi bi-search-heart-fill"></i></a>
@@ -72,6 +72,8 @@ $cards = $stmt->fetchAll();
                     <a href="manage-card.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-none d-md-inline"><i class="bi bi-card-list"></i> Manage cards</a>
                     <a href="manage-rarities.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-inline d-md-none"><i class="bi bi-gem"></i></a>
                     <a href="manage-rarities.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-none d-md-inline"><i class="bi bi-gem"></i> Manage tiers</a>
+                    <a href="manage-user.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-inline d-md-none"><i class="bi bi-people"></i></a>
+                    <a href="manage-user.php" class="btn btn-sm btn-info px-3 rounded-pill fw-semibold shadow-sm text-white d-none d-md-inline"><i class="bi bi-people"></i> Manage users</a>
                 <?php endif; ?>
                 <a href="logout.php" class="btn btn-sm btn-outline-danger rounded-circle" title="Log Out">
                     <i class="bi bi-box-arrow-right"></i>
