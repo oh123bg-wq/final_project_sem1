@@ -38,7 +38,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_quantity') {
     exit();
 }
 
-// 只拿当前登录用户的收藏，并且关联卡牌信息和稀有度名称
+// just take当前登录用户的收藏，并且关联卡牌信息和稀有度名称 :)
 $query = "SELECT cards.*, rarities.rarity_name, collections.quantity, collections.id AS collection_entry_id 
           FROM final_project_sem1.collections
           INNER JOIN final_project_sem1.cards ON collections.card_id = cards.id
@@ -50,7 +50,7 @@ $query = "SELECT cards.*, rarities.rarity_name, collections.quantity, collection
 if (isset($_POST['collection_entry_id'])) {
     $collection_entry_id = $_POST['collection_entry_id'];
 
-    // 安全策略：带上 user_id = ? 确保用户只能删除属于他自己的收藏，防止越权漏洞
+    //user_id = ? 确保用户只能删除属于他自己的收藏，防止越权漏洞
     $deleteQuery = "DELETE FROM final_project_sem1.collections WHERE id = :id AND user_id = :user_id";
 
     $stmt = $db->prepare($deleteQuery);
@@ -69,11 +69,10 @@ $cards = $stmt->fetchAll();
 
 // 初始化累加器变量 (Variables)
 $total_binder_value = 0;
-// 直接通过 count 获取一共有多少叠不同的卡牌
+// use count 获取一共有多少叠不同的卡牌
 $total_stacks = count($cards); 
 
 foreach ($cards as $card) {
-    // 将每一叠卡牌的 Stack Value 动态累加到总资产中
     $total_binder_value += $card['market_value'] * $card['quantity'];
 }
 ?>
@@ -139,7 +138,7 @@ foreach ($cards as $card) {
 
             <div class="col-md-8">
                 <h2 class="fw-bold text-dark mb-2" style="letter-spacing: -0.02em;">
-                    👋 Welcome, <span class="text-primary"><?= htmlspecialchars($current_username) ?></span>!
+                    👋 Welcome, <span class="text-primary"><?= $current_username ?></span>!
                 </h2>
                 <p class="text-muted mb-0 fs-6">
                     Here is your binder value overview and card inventory.
@@ -252,6 +251,7 @@ foreach ($cards as $card) {
                 const entryId = this.getAttribute('data-id');
                 // actionType = is the user press + or -
                 const actionType = this.getAttribute('data-action');
+                // know the user have how many qty of that card
                 const inputElement = this.parentElement.querySelector('input');
                 const currentQty = parseInt(inputElement.value);
 

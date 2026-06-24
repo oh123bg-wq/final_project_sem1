@@ -12,6 +12,7 @@ $query = "INSERT INTO users (username, email, password, role) VALUES (:username,
 $error_msg = '';
 $success_msg = '';
 
+// make sure the user is 通过 post method not get method
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && $username && $email && $password) {
 
     // have same email cannot register
@@ -58,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $username && $email && $password) {
     <style>
         body {
             background-color: #f4f6f9;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana,0000000000 sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;

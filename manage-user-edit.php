@@ -37,7 +37,7 @@ $user = $stmt->fetch();
 <html>
 
 <head>
-    <title>Simple CMS</title>
+    <title>Manage User Edit</title>
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
         rel="stylesheet"

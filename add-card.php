@@ -1,8 +1,9 @@
 <?php
 require('header.php');
 
+// this is to prevent the user come thourgh get method and got error
 $message = "";
-// the write a message "sucess" or "danger"
+// to write a message "sucess" or "danger"
 $message_type = "";
 
 $rarity_query = "SELECT id, rarity_name FROM rarities ORDER BY id ASC";
@@ -11,26 +12,27 @@ $rarity_stmt = $db->prepare($rarity_query);
 // 直接用 if 判断 execute() 是成功 (true) 还是失败 (false)
 if ($rarity_stmt && $rarity_stmt->execute()) {
     // fetch all your rarity
-    $rarities = $rarity_stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rarities = $rarity_stmt->fetchAll();
 } else {
     $message = "❌ Failed to load rarities due to a database issue.";
     $message_type = "danger";
-    // prevent error (依然给个空数组，防止下方的 HTML foreach 循环报错)
+    // prevent error 依然给个空数组，防止下方的 HTML foreach 循环报错
     $rarities = [];
 }
 
 
-//  check whether the user is submit or not
+//  check whether the user is submit or not (using POST method)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $card_name = isset($_POST['card_name']) ? $_POST['card_name'] : null;
     $pokemon_type = isset($_POST['pokemon_type']) ? $_POST['pokemon_type'] : null;
     $market_value = isset($_POST['market_value']) ? $_POST['market_value'] : null;
     $rarity_id = isset($_POST['rarity_id']) ? $_POST['rarity_id'] : null;
 
-    // 初始化图片数据库路径变量
-    $image_db_path = null;
+    // 初始化图片数据库路径变量(prevent error)
+    $image_db_1 = null;
 
     // 处理图片上传核心逻辑
+    // In PHP, 0 represents UPLOAD_ERR_OK, meaning there are no errors.
     if (isset($_FILES['card_image']) && $_FILES['card_image']['error'] == 0) {
 
         $file_name = $_FILES['card_image']['name'];
@@ -42,11 +44,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // upload to card_img
         $upload_folder = "card_img/";
 
-        $target_file_path = $upload_folder . $unique_file_name; // 结果如: "card_img/1717500000_greninja.jpg"
+        // example: "card_img/1717500000_greninja.jpg"
+        $target_file_1 = $upload_folder . $unique_file_name;
 
         //  将临时文件移动到项目的 card_img 文件夹中
-        if (move_uploaded_file($file_tmp, $target_file_path)) {
-            $image_db_path = $target_file_path; // 移动成功，记录路径准备存入数据库
+        // move_uploaded_file($source, $destination)
+        if (move_uploaded_file($file_tmp, $target_file_1)) {
+            // success，then记录路径准备存入数据库
+            $image_db_1 = $target_file_1;
         } else {
             $message = "❌ Failed to move uploaded file to destination folder.";
             $message_type = "danger";
@@ -56,21 +61,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $message_type = "danger";
     }
 
-    // 如果资料齐全且上传没报错，写入 SQL 数据库
     if ($card_name && $market_value && $rarity_id && $message_type != "danger") {
 
-        // 这里的写入数据的 Try-Catch 也换成了 If-Else
         $query = "INSERT INTO cards (card_name, pokemon_type, market_value, card_image, rarity_id) 
                   VALUES (:card_name, :pokemon_type, :market_value, :card_image, :rarity_id)";
 
         $stmt = $db->prepare($query);
 
         // 直接在 if 里面执行并判断结果
+        // if the stmt is true then just will execute
         if ($stmt && $stmt->execute([
             ':card_name' => $card_name,
             ':pokemon_type' => $pokemon_type,
             ':market_value' => $market_value,
-            ':card_image' => $image_db_path,
+            ':card_image' => $image_db_1,
             ':rarity_id' => $rarity_id
         ])) {
             $message = "🎉 New card data and image uploaded successfully!";
@@ -199,7 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div class="mb-4">
                     <label for="card_image" class="form-label">Card Image Photo</label>
                     <input type="file" class="form-control" id="card_image" name="card_image" accept="image/*" required>
-                    <div class="form-text">Saved into <code>card_img/</code> folder.</div>
+
                 </div>
 
                 <div class="d-grid pt-2">

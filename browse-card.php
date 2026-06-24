@@ -3,7 +3,7 @@ require('header.php');
 
 $current_username = $_SESSION['user']['username'];
 
-// SQL LEFT JOIN 联表查询语句，通过两张表共有的 ID，把 cards 表的所有卡牌数据和 rarities 表对应的稀有度名称（如 SR/UR）安全地拼接在一起。
+// SQL LEFT JOIN 通过两张表共有的 ID，把 cards table的所有卡牌数据和 rarities table对应的稀有度名称（如 SR/UR）拼接在一起。
 $query = "SELECT cards.*, rarities.rarity_name FROM final_project_sem1.cards LEFT JOIN rarities ON cards.rarity_id = rarities.id";
 
 $stmt = $db->prepare($query);
@@ -92,7 +92,7 @@ $cards = $stmt->fetchAll();
 
                         <img src="<?= $card['card_image'] ?>" class="card-img-top" alt="<?= $card['card_name'] ?>" />
                         <div class="card-body">
-                            <!-- 1. Rarity: 放在最上方，使用小字号和颜色 -->
+                            <!--  Rarity: 放在最上方，使用小字号和颜色 -->
                             <p class="text-primary fw-bold mb-1" style="font-size: 0.8rem; text-transform: uppercase;"><?= $card['rarity_name'] ?></p>
 
                             <!-- 卡片名称 -->
@@ -103,7 +103,7 @@ $cards = $stmt->fetchAll();
                                 <span class="fw-bold text-warning bg-light p-2 rounded"><?= $card['pokemon_type'] ?></span>
                             </div>
 
-                            <!-- 2. Value: 使用浅灰色背景包裹 -->
+                            <!-- Value: 使用浅灰色背景包裹 -->
                             <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-3">
                                 <span class="text-muted small">Value/Card:</span>
                                 <span class="fw-bold">RM <?= $card['market_value'] ?></span>

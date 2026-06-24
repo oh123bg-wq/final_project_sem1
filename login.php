@@ -7,9 +7,6 @@ $password = isset($_POST['password']) ? $_POST ['password'] : null;
 // This "if" statement sets up the username for all the commands below to become required to run and fix all errors 
 if(isset($_POST['username'])){
 
-
-// Change this to your database name (b18_sem1)
-// Also remove the last root since it's for Mac not Windows (, "");
 $db = new PDO("mysql:host=localhost;dbname=final_project_sem1", "root");
 
 // Searches the database to check if the user exists 
@@ -23,11 +20,10 @@ $stmt->execute(array(
 ));
 $user = $stmt->fetchAll();
 
-
 // $user[0] defines the password as array key
 // Checks if the submitted password is correct or wrong and echo the corresponding h1 
 $is_password_match = password_verify($password, $user[0]['password']);
-// If the correct password for the user is submitted it will show Correct Password, otherwise Wrong password will be displayed
+// If the correct password for the user is submitted it will show correct password, otherwise wrong password will be displayed
 echo $is_password_match ? "<h1>Correct password!</h1>" : "<h1>Wrong password!</h1>";
 
 if($is_password_match){
@@ -40,7 +36,6 @@ if($is_password_match){
     print_r($_SESSION['user']);
     header("Location: collection.php");
     
-    // Add a logout link, linked to a logout.php file, that clears the session.
     // In the logout file, add a link to login-form.php to close the loop.
     }
     echo "<h2><a href='./logout.php?logout=true'>Click me to logout</a></h2>";

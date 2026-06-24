@@ -82,7 +82,6 @@ $current_username = $is_logged_in ? $_SESSION['user']['username'] : '';
 
         <div class="hero-banner p-4 p-md-5 text-white mb-5 d-flex flex-column flex-md-row justify-content-between align-items-center gap-4">
             <div style="max-width: 600px;">
-                <span class="badge bg-white text-primary fw-bold px-3 py-2 rounded-pill text-uppercase mb-3 tracking-wider small">Version 1.0 Live</span>
                 <h1 class="display-5 fw-bold mb-3" style="line-height: 1.2;">The Ultimate Pokémon TCG Tracker</h1>
                 <p class="lead opacity-75 mb-4">Manage your personal card binders, view market analytics, and keep an eye on your absolute total collection value in real-time.</p>
 

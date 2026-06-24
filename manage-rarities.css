@@ -69,7 +69,6 @@
             background-color: white;
         }
 
-        /* 紫色按钮 */
         .btn-purple {
             background-color: #9333ea;
             color: white;
@@ -129,7 +128,6 @@
             font-size: 1.05rem;
         }
 
-        /* 删除垃圾桶按钮 */
         .btn-delete-link {
             background: none;
             border: none;

@@ -3,18 +3,14 @@ require("header.php");
 
 
 $id = $_GET['id'];
-// 用于存放密码不匹配时的错误提示信息
 $message = ""; 
 
-// 处理表单提交的本地密码更新与加密逻辑 (解冻并优化原本的逻辑)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'], $_POST['confirm_password'], $_POST['id'])) {
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
     $id = $_POST['id'];
 
-    // 在后端严格验证两次输入的密码是否相符
     if ($password === $confirm_password) {
-        // 使用安全合规的 password_hash 并配合 BCRYPT 算法对明文密码进行安全加密
         $updateQuery = "UPDATE users SET password=:password WHERE id=:id";
         $stmt = $db->prepare($updateQuery);
         $stmt->execute([
@@ -22,11 +18,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'], $_POST['c
             ":id"       => $id
         ]);
 
-        // 密码更新成功，重定向回用户管理主控面板
-        header("Location: manage-users.php");
+        header("Location: manage-user.php");
         exit;
     } else {
-        // 如果后端验证失败，给出错误提示
         $message = "❌ Password and Confirm Password do not match!";
     }
 }
@@ -36,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'], $_POST['c
 <html>
 
 <head>
-    <title>Simple CMS</title>
+    <title>Manage User Change Psd</title>
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -85,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'], $_POST['c
         <?php endif; ?>
 
         <div class="card mb-2 p-4">
-            <form method="POST">
+            <form method="POST" id="changePwdForm">
                 <div class="mb-3">
                     <div class="row">
                         <div class="col">
